@@ -1,7 +1,7 @@
 import './BookForm.css';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addBook } from '../redux/books/actionCreators';
+import { addBook } from '../redux/slices/bookSlices';
 import booksData from '../../data/books';
 import createBookWithId from '../../utils/createBookWithId';
 
