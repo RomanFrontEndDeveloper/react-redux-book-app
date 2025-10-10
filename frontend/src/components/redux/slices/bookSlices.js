@@ -1,10 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import createBookWithId from '../../../utils/createBookWithId';
-import { act } from 'react';
 import { setError } from './errorSlice';
 
-const initialState = [];
+const initialState = {
+	books: [],
+	isLoadingByAPI: false,
+};
 
 export const fetchBook = createAsyncThunk(
 	'books/fetchBook',
@@ -24,13 +26,15 @@ const booksSlice = createSlice({
 	initialState,
 	reducers: {
 		addBook: (state, action) => {
-			state.push(action.payload);
+			state.books.push(action.payload);
 		},
 		deleteBook: (state, action) => {
-			return state.filter((book) => book.id !== action.payload);
+			state.books = state.books.filter(
+				(book) => book.id !== action.payload
+			);
 		},
 		toggleFavorite: (state, action) => {
-			state.forEach((book) => {
+			state.books.forEach((book) => {
 				if (book.id === action.payload) {
 					book.isFavorite = !book.isFavorite;
 				}
@@ -38,17 +42,27 @@ const booksSlice = createSlice({
 		},
 	},
 
+	// ✅ Новий формат extraReducers (builder callback)
 	extraReducers: (builder) => {
-		builder.addCase(fetchBook.fulfilled, (state, action) => {
-			if (action.payload.title && action.payload.author) {
-				state.push(createBookWithId(action.payload, 'API'));
-			}
-		});
+		builder
+			.addCase(fetchBook.pending, (state) => {
+				state.isLoadingByAPI = true;
+			})
+			.addCase(fetchBook.fulfilled, (state, action) => {
+				state.isLoadingByAPI = false;
+				if (action.payload.title && action.payload.author) {
+					state.books.push(createBookWithId(action.payload, 'API'));
+				}
+			})
+			.addCase(fetchBook.rejected, (state) => {
+				state.isLoadingByAPI = false;
+			});
 	},
 });
 
 export const { addBook, deleteBook, toggleFavorite } = booksSlice.actions;
 
-export const selectBooks = (state) => state.books;
+export const selectBooks = (state) => state.books.books;
+export const selectIsLoadingViaAPI = (state) => state.books.isLoadingByAPI;
 
 export default booksSlice.reducer;
